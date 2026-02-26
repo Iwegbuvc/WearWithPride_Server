@@ -3,6 +3,7 @@ const cloudinary = require("cloudinary").v2;
 const Feature = require("../../models/featureModel");
 const Product = require("../../models/productModel");
 const User = require("../../models/usersModel");
+const Order = require("../../models/orderModel");
 
 // GET ALL USERS (Admin) with pagination, filters & search
 const getAllUsers = async (req, res) => {
