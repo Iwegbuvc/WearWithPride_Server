@@ -37,13 +37,6 @@ const addToCart = async (req, res) => {
     cart = new Cart({ user: req.user.id, items: [] });
   }
 
-  // const existingItem = cart.items.find(
-  //   (item) =>
-  //     item.product.toString() === productId &&
-  //     item.size === size &&
-  //     item.color === color,
-  //   item.selectedImage === selectedImage,
-  // );
   const existingItem = cart.items.find(
     (item) =>
       item.product.toString() === productId &&
@@ -67,8 +60,9 @@ const addToCart = async (req, res) => {
 
   cart.totalPrice = calculateTotal(cart.items);
   await cart.save();
-
-  res.status(200).json(cart);
+  // Populate product details before sending response
+  const populatedCart = await Cart.findOne({ user: req.user.id }).populate("items.product");
+  res.status(200).json(populatedCart);
 };
 
 const updateCartItem = async (req, res) => {
@@ -87,7 +81,9 @@ const updateCartItem = async (req, res) => {
   cart.totalPrice = calculateTotal(cart.items);
 
   await cart.save();
-  res.json(cart); // now items.product has full object with images & name
+  // Populate product details before sending response
+  const populatedCart = await Cart.findOne({ user: req.user.id }).populate("items.product");
+  res.json(populatedCart); // now items.product has full object with images & name
 };
 
 // REMOVE ITEM
@@ -101,7 +97,9 @@ const removeCartItem = async (req, res) => {
   cart.totalPrice = calculateTotal(cart.items);
 
   await cart.save();
-  res.json(cart);
+  // Populate product details before sending response
+  const populatedCart = await Cart.findOne({ user: req.user.id }).populate("items.product");
+  res.json(populatedCart);
 };
 
 // CLEAR CART (used after checkout)
