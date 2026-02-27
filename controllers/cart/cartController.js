@@ -37,12 +37,19 @@ const addToCart = async (req, res) => {
     cart = new Cart({ user: req.user.id, items: [] });
   }
 
+  // const existingItem = cart.items.find(
+  //   (item) =>
+  //     item.product.toString() === productId &&
+  //     item.size === size &&
+  //     item.color === color,
+  //   item.selectedImage === selectedImage,
+  // );
   const existingItem = cart.items.find(
     (item) =>
       item.product.toString() === productId &&
       item.size === size &&
-      item.color === color,
-    item.selectedImage === selectedImage,
+      item.color === color &&
+      item.selectedImage === selectedImage,
   );
 
   if (existingItem) {
