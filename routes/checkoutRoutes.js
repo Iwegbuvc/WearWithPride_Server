@@ -13,7 +13,7 @@ const {
 
 const router = express.Router();
 
-router.post("/paystack/webhook", webhookLimiter, paystackWebhook);
+// router.post("/paystack/webhook", webhookLimiter, paystackWebhook);
 
 // Create order from cart
 router.post("/", verifyToken, checkoutLimiter, createCheckout);
