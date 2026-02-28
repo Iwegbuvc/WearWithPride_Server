@@ -13,7 +13,12 @@ const paystackWebhook = async (req, res) => {
       .update(JSON.stringify(req.body))
       .digest("hex");
 
+    console.log("[Paystack Webhook] Computed hash:", hash);
+    console.log("[Paystack Webhook] Received signature:", req.headers["x-paystack-signature"]);
+    console.log("[Paystack Webhook] Event body:", JSON.stringify(req.body));
+
     if (hash !== req.headers["x-paystack-signature"]) {
+      console.error("[Paystack Webhook] Signature mismatch");
       return res.status(401).send("Invalid signature");
     }
 
@@ -24,10 +29,20 @@ const paystackWebhook = async (req, res) => {
       const { reference, metadata } = event.data;
       const orderId = metadata?.orderId;
 
-      if (!orderId) return res.sendStatus(200);
+      console.log("[Paystack Webhook] charge.success for orderId:", orderId);
+
+      if (!orderId) {
+        console.error("[Paystack Webhook] No orderId in metadata");
+        return res.sendStatus(200);
+      }
 
       const order = await Order.findById(orderId);
-      if (!order || order.paymentStatus === "paid") {
+      if (!order) {
+        console.error("[Paystack Webhook] Order not found for orderId:", orderId);
+        return res.sendStatus(200);
+      }
+      if (order.paymentStatus === "paid") {
+        console.log("[Paystack Webhook] Order already marked as paid:", orderId);
         return res.sendStatus(200);
       }
 
@@ -36,6 +51,7 @@ const paystackWebhook = async (req, res) => {
       order.paymentReference = reference;
       order.paidAt = new Date();
       await order.save();
+      console.log("[Paystack Webhook] Order marked as paid:", orderId);
 
       // 4️⃣ Reduce stock
       for (const item of order.items) {
@@ -43,14 +59,16 @@ const paystackWebhook = async (req, res) => {
           $inc: { stock: -item.quantity },
         });
       }
+      console.log("[Paystack Webhook] Stock reduced for order:", orderId);
 
       // 5️⃣ Clear cart
       await Cart.findOneAndDelete({ user: order.user });
+      console.log("[Paystack Webhook] Cart cleared for user:", order.user);
     }
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("Webhook error:", error.message);
+    console.error("Webhook error:", error);
     res.sendStatus(500);
   }
 };
