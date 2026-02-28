@@ -10,19 +10,31 @@ const paystackWebhook = async (req, res) => {
 
     const hash = crypto
       .createHmac("sha512", secret)
-      .update(JSON.stringify(req.body))
+      .update(req.body) // Use the raw buffer for signature verification
       .digest("hex");
 
     console.log("[Paystack Webhook] Computed hash:", hash);
     console.log("[Paystack Webhook] Received signature:", req.headers["x-paystack-signature"]);
-    console.log("[Paystack Webhook] Event body:", JSON.stringify(req.body));
+    // Print the raw buffer as a string for debugging
+    try {
+      console.log("[Paystack Webhook] Event body (raw):", req.body.toString());
+    } catch (e) {
+      console.log("[Paystack Webhook] Could not print raw body");
+    }
 
     if (hash !== req.headers["x-paystack-signature"]) {
       console.error("[Paystack Webhook] Signature mismatch");
       return res.status(401).send("Invalid signature");
     }
 
-    const event = req.body;
+    // Parse the raw buffer to JSON
+    let event;
+    try {
+      event = JSON.parse(req.body.toString());
+    } catch (e) {
+      console.error("[Paystack Webhook] Failed to parse event body as JSON");
+      return res.sendStatus(400);
+    }
 
     // 2️⃣ Handle successful payment
     if (event.event === "charge.success") {
