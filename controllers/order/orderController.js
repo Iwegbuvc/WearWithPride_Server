@@ -7,6 +7,7 @@ const mapOrderToFrontend = (order) => ({
   isPaid: order.paymentStatus === "paid",
   paymentStatus: order.paymentStatus,
   paymentMethod: order.paymentMethod || "Paystack",
+  orderStatus: order.orderStatus, // Add orderStatus field
   shippingAddress: {
     address: order.shippingAddress.address,
     city: order.shippingAddress.city,
